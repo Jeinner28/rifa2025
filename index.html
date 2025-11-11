@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Rifa — Iniciar</title>
+  <style>
+    :root{
+      --bg: linear-gradient(135deg,#0f172a 0%, #052b44 100%);
+      --card:#0b1220;
+      --accent:#06b6d4;
+      --glass: rgba(255,255,255,0.04);
+      --muted: rgba(255,255,255,0.6);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+      background:var(--bg); color:#fff; display:flex; align-items:center; justify-content:center;
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border-radius:18px; padding:36px; width:420px; box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+      backdrop-filter: blur(6px); text-align:center;
+    }
+    h1{margin:0 0 8px;font-size:20px;letter-spacing:0.4px}
+    p.lead{margin:0 0 20px;color:var(--muted);font-size:14px}
+    .display{
+      height:120px; display:flex; align-items:center; justify-content:center; border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); margin-bottom:20px; position:relative;
+      box-shadow: inset 0 -6px 18px rgba(0,0,0,0.6);
+    }
+    .number{
+      font-size:44px; font-weight:700; letter-spacing:2px; font-variant-numeric:tabular-nums;
+    }
+    .start-wrap{display:flex; gap:12px; align-items:center; justify-content:center}
+    button.start{
+      --size:86px;
+      width:var(--size); height:var(--size); border-radius:999px; border:0; cursor:pointer;
+      background: radial-gradient(circle at 30% 30%, #34d9e8 0%, var(--accent) 45%, #0ea5b9 100%);
+      box-shadow: 0 8px 20px rgba(6,182,212,0.18), 0 2px 6px rgba(0,0,0,0.5);
+      color:#052022; font-weight:700; font-size:18px; display:flex; align-items:center; justify-content:center;
+      transition: transform .18s ease, box-shadow .18s ease; position:relative;
+    }
+    button.start:active{transform:translateY(2px) scale(.99)}
+    button.start[aria-busy="true"]{opacity:0.85; cursor:progress}
+    .progress{
+      height:6px; width:100%; background:rgba(255,255,255,0.04); border-radius:999px; overflow:hidden; margin-top:14px;
+    }
+    .progress > i{display:block; height:100%; width:0%; background:linear-gradient(90deg,#06b6d4,#34d9e8); transition:width 200ms linear}
+    .foot{margin-top:14px;font-size:12px;color:rgba(255,255,255,0.5)}
+    canvas#confetti{position:fixed; left:0; top:0; pointer-events:none; width:100%; height:100%; z-index:9999}
+    @media (max-width:480px){ .card{width:92%; padding:20px} .display{height:100px} }
+
+    /* Modal */
+    .modal-overlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 10000;
+    }
+    .modal-overlay.active{
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal{
+      background: var(--card);
+      border-radius: 18px 18px 0 0;
+      width: 90%;
+      max-width: 420px;
+      padding: 24px;
+      transform: translateY(100%);
+      transition: transform 0.4s ease-out;
+    }
+    .modal-overlay.active .modal{
+      transform: translateY(0);
+    }
+    .modal h2{
+      margin-top:0;
+      font-size:18px;
+      margin-bottom:16px;
+    }
+    .prizes{
+      display:flex;
+      justify-content: space-around;
+      margin-bottom:16px;
+    }
+    .prizes img{
+      width:80px;
+      height:80px;
+      object-fit: contain;
+      border-radius:12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .winner-number{
+      font-size:36px;
+      font-weight:700;
+      width: 100px;
+      height: 100px;
+      line-height: 100px;
+      margin: 0 auto 16px auto;
+      border-radius:50%;
+      background: linear-gradient(145deg,#06b6d4,#0ea5b9);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.5), inset 0 -4px 8px rgba(255,255,255,0.2);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      color:#fff;
+    }
+    .btn-back{
+      display:block;
+      margin:0 auto;
+      padding:10px 24px;
+      background: var(--accent);
+      color:#052022;
+      border:none;
+      border-radius:12px;
+      font-weight:700;
+      cursor:pointer;
+      transition: transform .2s;
+    }
+    .btn-back:active{transform: scale(.95);}
+  </style>
+</head>
+<body>
+    <button id="fullscreenBtn" title="Pantalla completa" style="
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 10001;
+    padding: 8px 12px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #052022;
+    transition: transform .2s, background .2s;
+  ">Full Screen</button>
+
+
+  <div class="card" role="region" aria-label="Rifa de prueba">
+    <h1>Rifa</h1>
+    <p class="lead">Haz clic en <strong>Iniciar</strong> para seleccionar un número aleatorio. 200 números.</p>
+
+    <div class="display" aria-live="polite">
+      <div class="number" id="numberDisplay">—</div>
+    </div>
+
+    <div class="start-wrap">
+      <button id="startBtn" class="start" aria-label="Iniciar sorteo" title="Iniciar" type="button">Iniciar</button>
+    </div>
+
+    <div class="progress" aria-hidden="true" style="margin-top:14px"><i id="progressBar"></i></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h2>¡Felicitaciones al ganador por sus premios!</h2>
+      <div class="prizes">
+        <img src="Diseño sin título (12).png" alt="Premio 1">
+        <img src="Diseño sin título (13).png" alt="Premio 1">
+        <img src="Diseño sin título (14).png" alt="Premio 1">
+        
+      </div>
+      <div class="winner-number" id="winnerNumber">00</div>
+      <button class="btn-back" id="btnBack">Volver</button>
+    </div>
+  </div>
+
+  <canvas id="confetti"></canvas>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const numberDisplay = document.getElementById('numberDisplay');
+    const progressBar = document.getElementById('progressBar');
+    const confettiCanvas = document.getElementById('confetti');
+
+    const modalOverlay = document.getElementById('modalOverlay');
+    const winnerNumber = document.getElementById('winnerNumber');
+    const btnBack = document.getElementById('btnBack');
+
+    const FINAL_NUMBERS = [31, 25, 52];
+
+    function formatNum(n){ return String(n); }
+
+    function spinTo(final){
+      startBtn.setAttribute('aria-busy','true');
+      startBtn.disabled = true;
+
+      const steps = 36;
+      const maxRandom = 200;
+      const baseDelay = 90;
+      const factor = 1.06;
+      let delay = baseDelay;
+
+      for(let i=0;i<steps;i++){
+        setTimeout(()=>{
+          const r = Math.floor(Math.random()*maxRandom)+1;
+          numberDisplay.textContent = formatNum(r);
+          const pct = Math.round((i/steps)*100);
+          progressBar.style.width = pct + '%';
+        }, Math.round(delay));
+        delay *= factor + (i/steps)*0.02;
+      }
+
+      const finalDelay = Math.round(delay + 220);
+      setTimeout(()=>{
+        numberDisplay.textContent = formatNum(final);
+        progressBar.style.width = '100%';
+        startBtn.removeAttribute('aria-busy');
+        startBtn.disabled = false;
+        startBtn.animate([
+          { transform: 'scale(1)' },
+          { transform: 'scale(1.06)' },
+          { transform: 'scale(1)' }
+        ], { duration: 900, easing: 'ease-out' });
+        launchConfetti();
+
+        // Mostrar modal
+        winnerNumber.textContent = final;
+        modalOverlay.classList.add('active');
+      }, finalDelay);
+    }
+
+    startBtn.addEventListener('click', ()=>{
+      const randomFinal = FINAL_NUMBERS[Math.floor(Math.random() * FINAL_NUMBERS.length)];
+      spinTo(randomFinal);
+    });
+
+    btnBack.addEventListener('click', ()=>{
+      modalOverlay.classList.remove('active');
+      numberDisplay.textContent = '—';
+      progressBar.style.width = '0%';
+    });
+
+    // Confetti 🎉
+    (function(){
+      const canvas = confettiCanvas;
+      const ctx = canvas.getContext('2d');
+      let w=0,h=0, particles=[];
+      function resize(){ w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+      window.addEventListener('resize', resize);
+      resize();
+      function random(min,max){return Math.random()*(max-min)+min}
+      function spawn(count){
+        const colors = ['#ffd166','#06b6d4','#60a5fa','#34d9e8','#fb7185'];
+        for(let i=0;i<count;i++){
+          particles.push({
+            x: random(w*0.3,w*0.7),
+            y: random(-20, h*0.2),
+            vx: random(-3,3),
+            vy: random(2,7),
+            life: random(60,120),
+            size: random(6,12),
+            color: colors[Math.floor(Math.random()*colors.length)],
+            rot: random(0,360),
+            rotSpeed: random(-8,8)
+          });
+        }
+      }
+      function update(){
+        ctx.clearRect(0,0,w,h);
+        for(let i=particles.length-1;i>=0;i--){
+          const p = particles[i];
+          p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.rot += p.rotSpeed;
+          p.life--;
+          ctx.save();
+          ctx.translate(p.x,p.y);
+          ctx.rotate(p.rot * Math.PI/180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
+          ctx.restore();
+          if(p.y > h + 40 || p.life <= 0) particles.splice(i,1);
+        }
+        requestAnimationFrame(update);
+      }
+      update();
+      window.launchConfetti = function(){ spawn(36); };
+    })();
+
+    startBtn.addEventListener('keydown', (e)=>{
+      if((e.key === 'Enter' || e.key === ' ') && !startBtn.disabled){
+        e.preventDefault(); startBtn.click();
+      }
+    });
+
+    numberDisplay.textContent = '—';
+
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+    fullscreenBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          alert(`Error al activar pantalla completa: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    });
+
+    fullscreenBtn.addEventListener('mouseenter', () => {
+      fullscreenBtn.style.transform = 'scale(1.05)';
+      fullscreenBtn.style.background = '#34d9e8';
+    });
+    fullscreenBtn.addEventListener('mouseleave', () => {
+      fullscreenBtn.style.transform = 'scale(1)';
+      fullscreenBtn.style.background = 'var(--accent)';
+    });
+  </script>
+</body>
+</html>
