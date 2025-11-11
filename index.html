@@ -179,142 +179,137 @@
   <canvas id="confetti"></canvas>
 
   <script>
-    const startBtn = document.getElementById('startBtn');
-    const numberDisplay = document.getElementById('numberDisplay');
-    const progressBar = document.getElementById('progressBar');
-    const confettiCanvas = document.getElementById('confetti');
+const startBtn = document.getElementById('startBtn');
+const numberDisplay = document.getElementById('numberDisplay');
+const progressBar = document.getElementById('progressBar');
+const confettiCanvas = document.getElementById('confetti');
 
-    const modalOverlay = document.getElementById('modalOverlay');
-    const winnerNumber = document.getElementById('winnerNumber');
-    const btnBack = document.getElementById('btnBack');
+const modalOverlay = document.getElementById('modalOverlay');
+const winnerNumber = document.getElementById('winnerNumber');
+const btnBack = document.getElementById('btnBack');
 
-    const FINAL_NUMBERS = [31, 25, 52];
+const FINAL_NUMBERS = [31, 25, 52];
 
-    function formatNum(n){ return String(n); }
+function formatNum(n){ return String(n); }
 
-    function spinTo(final){
-      startBtn.setAttribute('aria-busy','true');
-      startBtn.disabled = true;
+function spinTo(final){
+  startBtn.setAttribute('aria-busy','true');
+  startBtn.disabled = true;
 
-      const steps = 36;
-      const maxRandom = 200;
-      const baseDelay = 90;
-      const factor = 1.06;
-      let delay = baseDelay;
+  const steps = 40;
+  const maxRandom = 300;
+  const baseDelay = 80;
+  const factor = 1.05;
+  let delay = baseDelay;
+  let totalTime = 0;
+  const times = [];
 
-      for(let i=0;i<steps;i++){
-        setTimeout(()=>{
-          const r = Math.floor(Math.random()*maxRandom)+1;
-          numberDisplay.textContent = formatNum(r);
-          const pct = Math.round((i/steps)*100);
-          progressBar.style.width = pct + '%';
-        }, Math.round(delay));
-        delay *= factor + (i/steps)*0.02;
-      }
+  // Precalcular los tiempos de cada paso
+  for(let i=0;i<steps;i++){
+    totalTime += delay;
+    times.push(totalTime);
+    delay *= factor;
+  }
 
-      const finalDelay = Math.round(delay + 220);
-      setTimeout(()=>{
+  const showFinalAt = Math.floor(steps * 0.95); // mostrar el final cuando falta ~5%
+
+  for(let i=0;i<steps;i++){
+    setTimeout(()=>{
+      const pct = Math.round((i/steps)*100);
+      progressBar.style.width = pct + '%';
+
+      // Si estamos en el último tramo, mostrar ya el número final
+      if(i >= showFinalAt){
         numberDisplay.textContent = formatNum(final);
-        progressBar.style.width = '100%';
-        startBtn.removeAttribute('aria-busy');
-        startBtn.disabled = false;
-        startBtn.animate([
-          { transform: 'scale(1)' },
-          { transform: 'scale(1.06)' },
-          { transform: 'scale(1)' }
-        ], { duration: 900, easing: 'ease-out' });
-        launchConfetti();
-
-        // Mostrar modal
-        winnerNumber.textContent = final;
-        modalOverlay.classList.add('active');
-      }, finalDelay);
-    }
-
-    startBtn.addEventListener('click', ()=>{
-      const randomFinal = FINAL_NUMBERS[Math.floor(Math.random() * FINAL_NUMBERS.length)];
-      spinTo(randomFinal);
-    });
-
-    btnBack.addEventListener('click', ()=>{
-      modalOverlay.classList.remove('active');
-      numberDisplay.textContent = '—';
-      progressBar.style.width = '0%';
-    });
-
-    // Confetti 🎉
-    (function(){
-      const canvas = confettiCanvas;
-      const ctx = canvas.getContext('2d');
-      let w=0,h=0, particles=[];
-      function resize(){ w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
-      window.addEventListener('resize', resize);
-      resize();
-      function random(min,max){return Math.random()*(max-min)+min}
-      function spawn(count){
-        const colors = ['#ffd166','#06b6d4','#60a5fa','#34d9e8','#fb7185'];
-        for(let i=0;i<count;i++){
-          particles.push({
-            x: random(w*0.3,w*0.7),
-            y: random(-20, h*0.2),
-            vx: random(-3,3),
-            vy: random(2,7),
-            life: random(60,120),
-            size: random(6,12),
-            color: colors[Math.floor(Math.random()*colors.length)],
-            rot: random(0,360),
-            rotSpeed: random(-8,8)
-          });
-        }
-      }
-      function update(){
-        ctx.clearRect(0,0,w,h);
-        for(let i=particles.length-1;i>=0;i--){
-          const p = particles[i];
-          p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.rot += p.rotSpeed;
-          p.life--;
-          ctx.save();
-          ctx.translate(p.x,p.y);
-          ctx.rotate(p.rot * Math.PI/180);
-          ctx.fillStyle = p.color;
-          ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
-          ctx.restore();
-          if(p.y > h + 40 || p.life <= 0) particles.splice(i,1);
-        }
-        requestAnimationFrame(update);
-      }
-      update();
-      window.launchConfetti = function(){ spawn(36); };
-    })();
-
-    startBtn.addEventListener('keydown', (e)=>{
-      if((e.key === 'Enter' || e.key === ' ') && !startBtn.disabled){
-        e.preventDefault(); startBtn.click();
-      }
-    });
-
-    numberDisplay.textContent = '—';
-
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-
-    fullscreenBtn.addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-          alert(`Error al activar pantalla completa: ${err.message}`);
-        });
       } else {
-        document.exitFullscreen();
+        const r = Math.floor(Math.random()*maxRandom)+1;
+        numberDisplay.textContent = formatNum(r);
       }
-    });
 
-    fullscreenBtn.addEventListener('mouseenter', () => {
-      fullscreenBtn.style.transform = 'scale(1.05)';
-      fullscreenBtn.style.background = '#34d9e8';
-    });
-    fullscreenBtn.addEventListener('mouseleave', () => {
-      fullscreenBtn.style.transform = 'scale(1)';
-      fullscreenBtn.style.background = 'var(--accent)';
-    });
-  </script>
+      // Al completar la barra (100%)
+      if(i === steps-1){
+        progressBar.style.width = '100%';
+        setTimeout(()=>{
+          startBtn.removeAttribute('aria-busy');
+          startBtn.disabled = false;
+          startBtn.animate(
+            [
+              { transform: 'scale(1)' },
+              { transform: 'scale(1.08)' },
+              { transform: 'scale(1)' }
+            ],
+            { duration: 1000, easing: 'ease-out' }
+          );
+
+          // 🎉 Lanzar confeti y mostrar modal
+          launchConfetti();
+          winnerNumber.textContent = final;
+          modalOverlay.classList.add('active');
+        }, 500); // pequeño retardo para sincronía visual
+      }
+
+    }, times[i]);
+  }
+}
+
+startBtn.addEventListener('click', ()=>{
+  const randomFinal = FINAL_NUMBERS[Math.floor(Math.random() * FINAL_NUMBERS.length)];
+  spinTo(randomFinal);
+});
+
+btnBack.addEventListener('click', ()=>{
+  modalOverlay.classList.remove('active');
+  numberDisplay.textContent = '—';
+  progressBar.style.width = '0%';
+});
+
+// 🎉 Confeti
+(function(){
+  const canvas = confettiCanvas;
+  const ctx = canvas.getContext('2d');
+  let w=0,h=0, particles=[];
+  function resize(){ w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+  window.addEventListener('resize', resize);
+  resize();
+  function random(min,max){return Math.random()*(max-min)+min}
+  function spawn(count){
+    const colors = ['#ffd166','#06b6d4','#60a5fa','#34d9e8','#fb7185'];
+    for(let i=0;i<count;i++){
+      particles.push({
+        x: random(w*0.3,w*0.7),
+        y: random(-20, h*0.2),
+        vx: random(-3,3),
+        vy: random(2,7),
+        life: random(60,120),
+        size: random(6,12),
+        color: colors[Math.floor(Math.random()*colors.length)],
+        rot: random(0,360),
+        rotSpeed: random(-8,8)
+      });
+    }
+  }
+  function update(){
+    ctx.clearRect(0,0,w,h);
+    for(let i=particles.length-1;i>=0;i--){
+      const p = particles[i];
+      p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.rot += p.rotSpeed;
+      p.life--;
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot * Math.PI/180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
+      ctx.restore();
+      if(p.y > h + 40 || p.life <= 0) particles.splice(i,1);
+    }
+    requestAnimationFrame(update);
+  }
+  update();
+  window.launchConfetti = function(){ spawn(36); };
+})();
+
+numberDisplay.textContent = '—';
+</script>
+
 </body>
 </html>
