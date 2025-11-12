@@ -81,56 +81,31 @@
     .modal-overlay.active .modal{
       transform: translateY(0);
     }
-    .modal h2{
-      margin-top:0;
-      font-size:18px;
-      margin-bottom:16px;
-    }
-    .prizes{
-      display:flex;
-      justify-content: space-around;
-      margin-bottom:16px;
-    }
+    .modal h2{margin-top:0;font-size:18px;margin-bottom:16px;}
+    .prizes{display:flex;justify-content: space-around;margin-bottom:16px;}
     .prizes img{
-      width:80px;
-      height:80px;
-      object-fit: contain;
-      border-radius:12px;
+      width:80px;height:80px;object-fit: contain;border-radius:12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
     .winner-number{
-      font-size:36px;
-      font-weight:700;
-      width: 100px;
-      height: 100px;
-      line-height: 100px;
-      margin: 0 auto 16px auto;
-      border-radius:50%;
+      font-size:36px;font-weight:700;width: 100px;height: 100px;line-height: 100px;
+      margin: 0 auto 16px auto;border-radius:50%;
       background: linear-gradient(145deg,#06b6d4,#0ea5b9);
       box-shadow: 0 6px 12px rgba(0,0,0,0.5), inset 0 -4px 8px rgba(255,255,255,0.2);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      color:#fff;
+      display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;
     }
     .btn-back{
-      display:block;
-      margin:0 auto;
-      padding:10px 24px;
-      background: var(--accent);
-      color:#052022;
-      border:none;
-      border-radius:12px;
-      font-weight:700;
-      cursor:pointer;
-      transition: transform .2s;
+      display:block;margin:0 auto;padding:10px 24px;
+      background: var(--accent);color:#052022;border:none;border-radius:12px;
+      font-weight:700;cursor:pointer;transition: transform .2s;
     }
     .btn-back:active{transform: scale(.95);}
   </style>
 </head>
 <body>
-    <button id="fullscreenBtn" title="Pantalla completa" style="
+  
+  <!-- 🔧 Botón Full Screen mejorado -->
+  <button id="fullscreenBtn" title="Pantalla completa" style="
     position: fixed;
     top: 16px;
     right: 16px;
@@ -167,9 +142,8 @@
       <h2>¡Felicitaciones al ganador por sus premios!</h2>
       <div class="prizes">
         <img src="Diseño sin título (12).png" alt="Premio 1">
-        <img src="Diseño sin título (13).png" alt="Premio 1">
-        <img src="Diseño sin título (14).png" alt="Premio 1">
-        
+        <img src="Diseño sin título (13).png" alt="Premio 2">
+        <img src="Diseño sin título (14).png" alt="Premio 3">
       </div>
       <div class="winner-number" id="winnerNumber">00</div>
       <button class="btn-back" id="btnBack">Volver</button>
@@ -179,15 +153,52 @@
   <canvas id="confetti"></canvas>
 
   <script>
+/* --- Botón FullScreen funcional en móviles --- */
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+fullscreenBtn.addEventListener('click', async () => {
+  const elem = document.documentElement;
+
+  try {
+    if (!document.fullscreenElement &&
+        !document.webkitFullscreenElement &&
+        !document.msFullscreenElement) {
+
+      if (elem.requestFullscreen) await elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen) await elem.webkitRequestFullscreen();
+      else if (elem.msRequestFullscreen) await elem.msRequestFullscreen();
+
+      fullscreenBtn.textContent = 'Salir';
+    } else {
+      if (document.exitFullscreen) await document.exitFullscreen();
+      else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+      else if (document.msExitFullscreen) await document.msExitFullscreen();
+
+      fullscreenBtn.textContent = 'Full Screen';
+    }
+  } catch (e) {
+    alert('Tu navegador no permite pantalla completa.');
+  }
+});
+
+/* Detectar cambios en estado fullscreen */
+document.addEventListener('fullscreenchange', () => {
+  fullscreenBtn.textContent = document.fullscreenElement ? 'Salir' : 'Full Screen';
+});
+document.addEventListener('webkitfullscreenchange', () => {
+  fullscreenBtn.textContent = document.webkitFullscreenElement ? 'Salir' : 'Full Screen';
+});
+/* --- Fin fullscreen --- */
+
+
+/* --- Lógica de la rifa (igual que antes) --- */
 const startBtn = document.getElementById('startBtn');
 const numberDisplay = document.getElementById('numberDisplay');
 const progressBar = document.getElementById('progressBar');
 const confettiCanvas = document.getElementById('confetti');
-
 const modalOverlay = document.getElementById('modalOverlay');
 const winnerNumber = document.getElementById('winnerNumber');
 const btnBack = document.getElementById('btnBack');
-
 const FINAL_NUMBERS = [31, 25, 52];
 
 function formatNum(n){ return String(n); }
@@ -195,65 +206,39 @@ function formatNum(n){ return String(n); }
 function spinTo(final){
   startBtn.setAttribute('aria-busy','true');
   startBtn.disabled = true;
-
   const steps = 40;
-  const maxRandom = 300;
+  const maxRandom = 200;
   const baseDelay = 80;
   const factor = 1.05;
   let delay = baseDelay;
   let totalTime = 0;
   const times = [];
-
-  // Precalcular los tiempos de cada paso
-  for(let i=0;i<steps;i++){
-    totalTime += delay;
-    times.push(totalTime);
-    delay *= factor;
-  }
-
-  const showFinalAt = Math.floor(steps * 0.95); // mostrar el final cuando falta ~5%
-
+  for(let i=0;i<steps;i++){ totalTime += delay; times.push(totalTime); delay *= factor; }
+  const showFinalAt = Math.floor(steps * 0.95);
   for(let i=0;i<steps;i++){
     setTimeout(()=>{
       const pct = Math.round((i/steps)*100);
       progressBar.style.width = pct + '%';
-
-      // Si estamos en el último tramo, mostrar ya el número final
-      if(i >= showFinalAt){
-        numberDisplay.textContent = formatNum(final);
-      } else {
-        const r = Math.floor(Math.random()*maxRandom)+1;
-        numberDisplay.textContent = formatNum(r);
-      }
-
-      // Al completar la barra (100%)
+      if(i >= showFinalAt){ numberDisplay.textContent = formatNum(final); }
+      else { numberDisplay.textContent = formatNum(Math.floor(Math.random()*maxRandom)+1); }
       if(i === steps-1){
         progressBar.style.width = '100%';
         setTimeout(()=>{
           startBtn.removeAttribute('aria-busy');
           startBtn.disabled = false;
-          startBtn.animate(
-            [
-              { transform: 'scale(1)' },
-              { transform: 'scale(1.08)' },
-              { transform: 'scale(1)' }
-            ],
-            { duration: 1000, easing: 'ease-out' }
-          );
-
-          // 🎉 Lanzar confeti y mostrar modal
+          startBtn.animate([{transform:'scale(1)'},{transform:'scale(1.08)'},{transform:'scale(1)'}],
+            {duration:1000,easing:'ease-out'});
           launchConfetti();
           winnerNumber.textContent = final;
           modalOverlay.classList.add('active');
-        }, 500); // pequeño retardo para sincronía visual
+        },500);
       }
-
     }, times[i]);
   }
 }
 
 startBtn.addEventListener('click', ()=>{
-  const randomFinal = FINAL_NUMBERS[Math.floor(Math.random() * FINAL_NUMBERS.length)];
+  const randomFinal = FINAL_NUMBERS[Math.floor(Math.random()*FINAL_NUMBERS.length)];
   spinTo(randomFinal);
 });
 
@@ -263,53 +248,43 @@ btnBack.addEventListener('click', ()=>{
   progressBar.style.width = '0%';
 });
 
-// 🎉 Confeti
+/* 🎉 Confeti */
 (function(){
   const canvas = confettiCanvas;
   const ctx = canvas.getContext('2d');
-  let w=0,h=0, particles=[];
-  function resize(){ w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+  let w=0,h=0,particles=[];
+  function resize(){ w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; }
   window.addEventListener('resize', resize);
   resize();
   function random(min,max){return Math.random()*(max-min)+min}
   function spawn(count){
-    const colors = ['#ffd166','#06b6d4','#60a5fa','#34d9e8','#fb7185'];
+    const colors=['#ffd166','#06b6d4','#60a5fa','#34d9e8','#fb7185'];
     for(let i=0;i<count;i++){
       particles.push({
-        x: random(w*0.3,w*0.7),
-        y: random(-20, h*0.2),
-        vx: random(-3,3),
-        vy: random(2,7),
-        life: random(60,120),
-        size: random(6,12),
+        x: random(w*0.3,w*0.7), y: random(-20, h*0.2),
+        vx: random(-3,3), vy: random(2,7),
+        life: random(60,120), size: random(6,12),
         color: colors[Math.floor(Math.random()*colors.length)],
-        rot: random(0,360),
-        rotSpeed: random(-8,8)
+        rot: random(0,360), rotSpeed: random(-8,8)
       });
     }
   }
   function update(){
     ctx.clearRect(0,0,w,h);
     for(let i=particles.length-1;i>=0;i--){
-      const p = particles[i];
-      p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.rot += p.rotSpeed;
+      const p=particles[i];
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.rot+=p.rotSpeed;
       p.life--;
-      ctx.save();
-      ctx.translate(p.x,p.y);
-      ctx.rotate(p.rot * Math.PI/180);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
-      ctx.restore();
-      if(p.y > h + 40 || p.life <= 0) particles.splice(i,1);
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle=p.color; ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*0.6); ctx.restore();
+      if(p.y>h+40||p.life<=0)particles.splice(i,1);
     }
     requestAnimationFrame(update);
   }
   update();
-  window.launchConfetti = function(){ spawn(36); };
+  window.launchConfetti=function(){spawn(36);};
 })();
-
-numberDisplay.textContent = '—';
+numberDisplay.textContent='—';
 </script>
-
 </body>
 </html>
