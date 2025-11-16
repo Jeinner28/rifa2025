@@ -104,7 +104,7 @@
 </head>
 <body>
   
-  <!-- 🔧 Botón Full Screen mejorado -->
+  <!-- Botón FullScreen -->
   <button id="fullscreenBtn" title="Pantalla completa" style="
     position: fixed;
     top: 16px;
@@ -123,7 +123,7 @@
 
   <div class="card" role="region" aria-label="Rifa de prueba">
     <h1>Rifa</h1>
-    <p class="lead">Haz clic en <strong>Iniciar</strong> para seleccionar un número aleatorio. 200 números.</p>
+    <p class="lead">Haz clic en <strong>Iniciar</strong> para seleccionar un número. 200 números.</p>
 
     <div class="display" aria-live="polite">
       <div class="number" id="numberDisplay">—</div>
@@ -153,7 +153,7 @@
   <canvas id="confetti"></canvas>
 
   <script>
-/* --- Botón FullScreen funcional en móviles --- */
+/* FULLSCREEN */
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 
 fullscreenBtn.addEventListener('click', async () => {
@@ -181,17 +181,14 @@ fullscreenBtn.addEventListener('click', async () => {
   }
 });
 
-/* Detectar cambios en estado fullscreen */
 document.addEventListener('fullscreenchange', () => {
   fullscreenBtn.textContent = document.fullscreenElement ? 'Salir' : 'Full Screen';
 });
 document.addEventListener('webkitfullscreenchange', () => {
   fullscreenBtn.textContent = document.webkitFullscreenElement ? 'Salir' : 'Full Screen';
 });
-/* --- Fin fullscreen --- */
 
-
-/* --- Lógica de la rifa (igual que antes) --- */
+/* SORTEO */
 const startBtn = document.getElementById('startBtn');
 const numberDisplay = document.getElementById('numberDisplay');
 const progressBar = document.getElementById('progressBar');
@@ -200,6 +197,8 @@ const modalOverlay = document.getElementById('modalOverlay');
 const winnerNumber = document.getElementById('winnerNumber');
 const btnBack = document.getElementById('btnBack');
 const FINAL_NUMBERS = [31, 25, 52, 161, 151, 126];
+
+let currentIndex = 0;
 
 function formatNum(n){ return String(n); }
 
@@ -238,8 +237,16 @@ function spinTo(final){
 }
 
 startBtn.addEventListener('click', ()=>{
-  const randomFinal = FINAL_NUMBERS[Math.floor(Math.random()*FINAL_NUMBERS.length)];
-  spinTo(randomFinal);
+
+  // Si llega al final → reinicia secuencia
+  if (currentIndex >= FINAL_NUMBERS.length) {
+    currentIndex = 0;
+  }
+
+  const nextFinal = FINAL_NUMBERS[currentIndex];
+  currentIndex++;
+
+  spinTo(nextFinal);
 });
 
 btnBack.addEventListener('click', ()=>{
@@ -248,7 +255,7 @@ btnBack.addEventListener('click', ()=>{
   progressBar.style.width = '0%';
 });
 
-/* 🎉 Confeti */
+/* CONFETTI */
 (function(){
   const canvas = confettiCanvas;
   const ctx = canvas.getContext('2d');
@@ -288,4 +295,3 @@ numberDisplay.textContent='—';
 </script>
 </body>
 </html>
-
